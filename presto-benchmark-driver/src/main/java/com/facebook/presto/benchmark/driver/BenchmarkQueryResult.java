@@ -30,14 +30,14 @@ public class BenchmarkQueryResult
 
     private static final Stat FAIL_STAT = new Stat(new double[0]);
 
-    public static BenchmarkQueryResult passResult(Suite suite, BenchmarkQuery benchmarkQuery, Stat wallTimeNanos, Stat processCpuTimeNanos, Stat queryCpuTimeNanos)
+    public static BenchmarkQueryResult passResult(Suite suite, BenchmarkQuery benchmarkQuery, Stat wallTimeNanos, Stat processCpuTimeNanos, Stat queryCpuTimeNanos, Stat peakTotalMemoryBytes)
     {
-        return new BenchmarkQueryResult(suite, benchmarkQuery, Status.PASS, Optional.empty(), wallTimeNanos, processCpuTimeNanos, queryCpuTimeNanos);
+        return new BenchmarkQueryResult(suite, benchmarkQuery, Status.PASS, Optional.empty(), wallTimeNanos, processCpuTimeNanos, queryCpuTimeNanos, peakTotalMemoryBytes);
     }
 
     public static BenchmarkQueryResult failResult(Suite suite, BenchmarkQuery benchmarkQuery, String errorMessage)
     {
-        return new BenchmarkQueryResult(suite, benchmarkQuery, Status.FAIL, Optional.of(errorMessage), FAIL_STAT, FAIL_STAT, FAIL_STAT);
+        return new BenchmarkQueryResult(suite, benchmarkQuery, Status.FAIL, Optional.of(errorMessage), FAIL_STAT, FAIL_STAT, FAIL_STAT, FAIL_STAT);
     }
 
     private final Suite suite;
@@ -47,6 +47,7 @@ public class BenchmarkQueryResult
     private final Stat wallTimeNanos;
     private final Stat processCpuTimeNanos;
     private final Stat queryCpuTimeNanos;
+    private final Stat peakTotalMemoryBytes;
 
     private BenchmarkQueryResult(
             Suite suite,
@@ -55,7 +56,8 @@ public class BenchmarkQueryResult
             Optional<String> errorMessage,
             Stat wallTimeNanos,
             Stat processCpuTimeNanos,
-            Stat queryCpuTimeNanos)
+            Stat queryCpuTimeNanos,
+            Stat peakTotalMemoryBytes)
     {
         this.suite = requireNonNull(suite, "suite is null");
         this.benchmarkQuery = requireNonNull(benchmarkQuery, "benchmarkQuery is null");
@@ -64,6 +66,7 @@ public class BenchmarkQueryResult
         this.wallTimeNanos = requireNonNull(wallTimeNanos, "wallTimeNanos is null");
         this.processCpuTimeNanos = requireNonNull(processCpuTimeNanos, "processCpuTimeNanos is null");
         this.queryCpuTimeNanos = requireNonNull(queryCpuTimeNanos, "queryCpuTimeNanos is null");
+        this.peakTotalMemoryBytes = requireNonNull(peakTotalMemoryBytes, "peakTotalMemoryBytes is null");
     }
 
     public Suite getSuite()
@@ -101,6 +104,11 @@ public class BenchmarkQueryResult
         return queryCpuTimeNanos;
     }
 
+    public Stat getPeakTotalMemoryBytes()
+    {
+        return peakTotalMemoryBytes;
+    }
+
     @Override
     public String toString()
     {
@@ -117,6 +125,9 @@ public class BenchmarkQueryResult
                 .add("queryCpuTimeMedian", new Duration(queryCpuTimeNanos.getMedian(), NANOSECONDS).convertToMostSuccinctTimeUnit())
                 .add("queryCpuTimeMean", new Duration(queryCpuTimeNanos.getMean(), NANOSECONDS).convertToMostSuccinctTimeUnit())
                 .add("queryCpuTimeStd", new Duration(queryCpuTimeNanos.getStandardDeviation(), NANOSECONDS).convertToMostSuccinctTimeUnit())
+                .add("peakTotalMemoryBytesMedian", peakTotalMemoryBytes.getMedian())
+                .add("peakTotalMemoryBytesMean", peakTotalMemoryBytes.getMean())
+                .add("peakTotalMemoryBytesP99", peakTotalMemoryBytes.getP95())
                 .add("error", errorMessage)
                 .toString();
     }

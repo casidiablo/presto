@@ -119,6 +119,7 @@ public class BenchmarkQueryRunner
         double[] wallTimeNanos = new double[runs];
         double[] processCpuTimeNanos = new double[runs];
         double[] queryCpuTimeNanos = new double[runs];
+        double[] peakTotalMemoryBytes = new double[runs];
         for (int i = 0; i < runs; ) {
             try {
                 long startCpuTime = getTotalCpuTime();
@@ -132,6 +133,7 @@ public class BenchmarkQueryRunner
                 wallTimeNanos[i] = endWallTime - startWallTime;
                 processCpuTimeNanos[i] = endCpuTime - startCpuTime;
                 queryCpuTimeNanos[i] = MILLISECONDS.toNanos(statementStats.getCpuTimeMillis());
+                peakTotalMemoryBytes[i] = statementStats.getPeakTotalMemoryBytes();
 
                 i++;
                 failures = 0;
@@ -149,7 +151,8 @@ public class BenchmarkQueryRunner
                 query,
                 new Stat(wallTimeNanos),
                 new Stat(processCpuTimeNanos),
-                new Stat(queryCpuTimeNanos));
+                new Stat(queryCpuTimeNanos),
+                new Stat(peakTotalMemoryBytes));
     }
 
     public List<String> getSchemas(ClientSession session)
@@ -248,7 +251,7 @@ public class BenchmarkQueryRunner
         failures++;
 
         if (failures > maxFailures) {
-            throw new RuntimeException("To many consecutive failures");
+            throw new RuntimeException("Too many consecutive failures");
         }
 
         try {
@@ -265,15 +268,26 @@ public class BenchmarkQueryRunner
         long totalCpuTime = 0;
         for (URI server : nodes) {
             URI addressUri = uriBuilderFrom(server).replacePath("/v1/jmx/mbean/java.lang:type=OperatingSystem/ProcessCpuTime").build();
-            String data = httpClient.execute(prepareGet().setUri(addressUri).build(), createStringResponseHandler()).getBody();
+            String data = httpClient.execute(prepareGet().setHeader("X-Presto-User", "presto").setUri(addressUri).build(), createStringResponseHandler()).getBody();
             totalCpuTime += parseLong(data.trim());
         }
         return TimeUnit.NANOSECONDS.toNanos(totalCpuTime);
     }
 
+    private long getUsedMemory()
+    {
+        long usedMemory = 0;
+        for (URI server : nodes) {
+            URI addressUri = uriBuilderFrom(server).replacePath("/v1/jmx/mbean/com.facebook.presto.memory:type=MemoryPool,name=general/ReservedBytes").build();
+            String data = httpClient.execute(prepareGet().setHeader("X-Presto-User", "presto").setUri(addressUri).build(), createStringResponseHandler()).getBody();
+            usedMemory += parseLong(data.trim());
+        }
+        return usedMemory;
+    }
+
     private List<URI> getAllNodes(URI server)
     {
-        Request request = prepareGet().setUri(uriBuilderFrom(server).replacePath("/v1/service/presto").build()).build();
+        Request request = prepareGet().setHeader("X-Presto-User", "presto").setUri(uriBuilderFrom(server).replacePath("/v1/service/presto").build()).build();
         JsonResponseHandler<ServiceDescriptorsRepresentation> responseHandler = createJsonResponseHandler(jsonCodec(ServiceDescriptorsRepresentation.class));
         ServiceDescriptorsRepresentation serviceDescriptors = httpClient.execute(request, responseHandler);
 

@@ -75,6 +75,9 @@ public class BenchmarkResultsPrinter
                 .add("queryCpuTimeP50")
                 .add("queryCpuTimeMean")
                 .add("queryCpuTimeStd")
+                .add("peakMemP50")
+                .add("peakMemAvg")
+                .add("peakMemP95")
                 .add("status")
                 .add("error")
                 .build());
@@ -103,6 +106,9 @@ public class BenchmarkResultsPrinter
                 .add(NANOSECONDS.toMillis((long) result.getQueryCpuTimeNanos().getMedian()))
                 .add(NANOSECONDS.toMillis((long) result.getQueryCpuTimeNanos().getMean()))
                 .add(NANOSECONDS.toMillis((long) result.getQueryCpuTimeNanos().getStandardDeviation()))
+                .add(NANOSECONDS.toMillis((long) result.getPeakTotalMemoryBytes().getMedian()))
+                .add(NANOSECONDS.toMillis((long) result.getPeakTotalMemoryBytes().getMean()))
+                .add(NANOSECONDS.toMillis((long) result.getPeakTotalMemoryBytes().getP95()))
                 .add(result.getStatus().toString().toLowerCase(Locale.ENGLISH))
                 .add(errorMessage.orElse(""))
                 .build());

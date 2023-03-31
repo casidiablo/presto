@@ -16,6 +16,7 @@ package com.facebook.presto.benchmark.driver;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
@@ -24,12 +25,14 @@ public class Stat
     private final double mean;
     private final double standardDeviation;
     private final double median;
+    private final double p95;
 
     public Stat(double[] values)
     {
         mean = new Mean().evaluate(values);
         standardDeviation = new StandardDeviation().evaluate(values);
         median = new Median().evaluate(values);
+        p95 = new Percentile(.95).evaluate(values);
     }
 
     public double getMean()
@@ -45,6 +48,11 @@ public class Stat
     public double getMedian()
     {
         return median;
+    }
+
+    public double getP95()
+    {
+        return p95;
     }
 
     @Override

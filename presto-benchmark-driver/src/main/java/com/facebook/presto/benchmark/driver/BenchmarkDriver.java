@@ -74,6 +74,7 @@ public class BenchmarkDriver
             benchmarkSchemas = ImmutableList.of(new BenchmarkSchema(session.getSchema()));
         }
         if (benchmarkSchemas.isEmpty()) {
+            System.out.println("No schemas to benchmark");
             return;
         }
 
